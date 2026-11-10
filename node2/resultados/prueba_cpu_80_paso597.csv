@@ -1,0 +1,2 @@
+prueba,nodo,contenedor,metodo,cpu_real_pct,umbral_pct,solicitudes_exitosas,solicitudes_fallidas,resultado
+597,pcm-node1,pcm-flask-app,cgroup_v1_cpuacct,90.29,80,23,0,UMBRAL_SUPERADO

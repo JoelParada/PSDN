@@ -1,0 +1,41 @@
+PROYECTO: PREDICTIVE CONTAINER MIGRATION
+PRUEBA INTEGRADA CON LSTM V5
+
+INFRAESTRUCTURA
+PCM-Node1: 192.168.56.11
+PCM-Node2: 192.168.56.12
+PCM-Node3: 192.168.56.13
+
+PRUEBA DE SOBRECARGA
+CPU promedio medida: 81.29%
+Prediccion LSTM V5: 83.39%
+Umbral operativo: 80%
+Solicitudes correctas: 224
+Solicitudes fallidas: 0
+
+DECISION DEL SISTEMA
+CANDIDATO A CONMUTACION HACIA PCM-NODE3
+
+VERIFICACION DEL DESTINO
+HTTP: CORRECTO
+CPU contenedor: 0.07%
+RAM contenedor: 1.13%
+CPU global: 6.20%
+RAM global disponible: 75.85%
+
+CONMUTACION CONTROLADA
+Origen: PCM-Node1
+Destino: PCM-Node3
+Tiempo de operacion: 0.7363 segundos
+Resultado: EXITOSO
+
+VERIFICACION POST-CONMUTACION
+Nodo activo: PCM-Node3
+Aplicacion Flask: FUNCIONANDO
+Healthcheck: OK
+
+LIMITACIONES
+La conmutacion se ejecuto manualmente.
+No se transfirio el estado interno del contenedor.
+El modelo LSTM V5 requiere validacion adicional.
+No se midio la continuidad durante esta conmutacion.

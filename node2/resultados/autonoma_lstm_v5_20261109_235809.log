@@ -1,0 +1,39 @@
+=== PRUEBA AUTONOMA PCM CON LSTM REAL ===
+Verificando nodo inicial...
+Iniciando carga real...
+=== GENERADOR DE CARGA PCM ===
+Destino: PCM-Node1
+Duracion maxima: 180 segundos
+Solicitudes concurrentes: 3
+Ejecutando controlador con LSTM V5 real...
+=== CONTROLADOR INTEGRADO PCM V5 ===
+Nodo activo: pcm-node1
+
+1. Recolectando metricas...
+=== RECOLECCION CPU CGROUP ===
+Medicion 1/10: 72.42%
+Medicion 2/10: 74.52%
+Medicion 3/10: 76.43%
+Medicion 4/10: 77.43%
+Medicion 5/10: 80.01%
+Medicion 6/10: 79.29%
+Medicion 7/10: 80.82%
+Medicion 8/10: 79.25%
+Medicion 9/10: 79.33%
+Medicion 10/10: 78.86%
+Archivo: /home/pcmadmin/pcm-orquestador/metricas/cpu_cgroup_carga.csv
+RECOLECCION FINALIZADA
+
+2. Transfiriendo metricas...
+
+3. Verificando frescura de metricas...
+Antiguedad: 1.6 segundos
+
+4. Ejecutando LSTM V5...
+CPU predicha: 79.202%
+Decision: MANTENER CONFIGURACION ACTUAL
+RESULTADO: MANTENER CONFIGURACION
+Verificando nodo final...
+=== DETECCION DEL NODO ACTIVO ===
+Nodo activo configurado: pcm-node1
+Deteccion completada correctamente

@@ -1,0 +1,8 @@
+{
+  "secuencias_entrenamiento": 230,
+  "secuencias_prueba": 102,
+  "mae_lstm": 10.637630462646484,
+  "rmse_lstm": 15.012646675109863,
+  "mae_persistencia": 3.1481392559092414,
+  "umbral_operativo": 80.0
+}

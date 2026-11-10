@@ -1,0 +1,25 @@
+PROYECTO: PREDICTIVE CONTAINER MIGRATION
+PRUEBA: CONMUTACION FUNCIONAL SUPERVISADA
+
+Nodo origen: PCM-Node1
+Nodo destino: PCM-Node3
+Prediccion simulada: 85.000%
+Umbral operativo: 80.000%
+
+CPU contenedor destino: 0.10%
+RAM contenedor destino: 1.13%
+CPU global destino: 6.20%
+RAM disponible destino: 75.90%
+
+Resultado: CONMUTACION SUPERVISADA EXITOSA
+Tiempo de operacion: 0.7471 segundos
+Proxy final: PCM-Node3
+Verificacion HTTP: CORRECTA
+
+NOTA:
+La prediccion del 85% fue simulada para verificar
+la logica de decision y la conmutacion supervisada.
+No representa una prediccion real del modelo LSTM.
+
+La prueba no midio disponibilidad continua durante
+esta conmutacion especifica.

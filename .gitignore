@@ -1,0 +1,27 @@
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Credenciales y claves privadas
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Respaldos
+*.respaldo
+*.respaldo*
+*_respaldo.py
+*_respaldo.sh
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db

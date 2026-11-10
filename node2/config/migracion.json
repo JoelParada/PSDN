@@ -1,0 +1,25 @@
+{
+  "origen": {
+    "nombre": "pcm-node1",
+    "ip": "192.168.56.11",
+    "usuario": "pcmadmin",
+    "ssh_key": "/home/pcmadmin/.ssh/pcm_node1_ed25519",
+    "contenedor": "pcm-flask-app",
+    "puerto": 5000
+  },
+  "destino": {
+    "nombre": "pcm-node3",
+    "ip": "192.168.56.13",
+    "usuario": "pcmadmin",
+    "ssh_key": "/home/pcmadmin/.ssh/pcm_node3_ed25519",
+    "contenedor_actual": "pcm-flask-app",
+    "contenedor_prueba": "pcm-flask-migracion-test",
+    "puerto_actual": 5000,
+    "puerto_prueba": 5001
+  },
+  "imagen": "pcm-flask:v1",
+  "healthcheck": {
+    "ruta": "/",
+    "timeout_segundos": 5
+  }
+}

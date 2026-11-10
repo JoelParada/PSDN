@@ -1,0 +1,27 @@
+=== CONTROLADOR INTEGRADO PCM V5 ===
+Nodo activo: pcm-node1
+
+1. Recolectando metricas...
+=== RECOLECCION CPU CGROUP ===
+Medicion 1/10: 75.59%
+Medicion 2/10: 74.92%
+Medicion 3/10: 73.17%
+Medicion 4/10: 79.89%
+Medicion 5/10: 78.92%
+Medicion 6/10: 79.05%
+Medicion 7/10: 80.63%
+Medicion 8/10: 77.87%
+Medicion 9/10: 80.72%
+Medicion 10/10: 79.66%
+Archivo: /home/pcmadmin/pcm-orquestador/metricas/cpu_cgroup_carga.csv
+RECOLECCION FINALIZADA
+
+2. Transfiriendo metricas...
+
+3. Verificando frescura de metricas...
+Antiguedad: 1.3 segundos
+
+4. Ejecutando LSTM V5...
+CPU predicha: 79.099%
+Decision: MANTENER CONFIGURACION ACTUAL
+RESULTADO: MANTENER CONFIGURACION

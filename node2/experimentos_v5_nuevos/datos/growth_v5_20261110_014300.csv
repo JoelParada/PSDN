@@ -1,0 +1,3 @@
+timestamp,experimento_id,escenario,nodo,cpu_pct,ram_mib,segundos_desde_inicio
+2026-11-10T01:43:11,growth_v5_20261110_014300,growth,pcm-node1,0.7935,21.3,9.41
+2026-11-10T01:43:21,growth_v5_20261110_014300,growth,pcm-node1,0.4502,21.3,18.65

@@ -1,0 +1,29 @@
+=== EXPERIMENTO GROWTH V5 ===
+=== MONITOREO CPU/RAM PCM V5 ===
+Escenario: growth
+Muestras: 16
+Archivo: /home/pcmadmin/pcm-orquestador/experimentos_v5_nuevos/datos/growth_v5_20261110_031625.csv
+ETAPA 1/4: 1 trabajadores durante 30 segundos
+Muestra 1/16: CPU=48.67% | RAM=23.05 MiB
+Muestra 2/16: CPU=75.69% | RAM=23.05 MiB
+ETAPA 2/4: 2 trabajadores durante 30 segundos
+Muestra 3/16: CPU=76.48% | RAM=23.03 MiB
+Muestra 4/16: CPU=73.66% | RAM=23.07 MiB
+Muestra 5/16: CPU=82.73% | RAM=23.07 MiB
+Muestra 6/16: CPU=83.15% | RAM=23.07 MiB
+ETAPA 3/4: 3 trabajadores durante 30 segundos
+Muestra 7/16: CPU=66.04% | RAM=23.10 MiB
+Muestra 8/16: CPU=73.37% | RAM=23.11 MiB
+Muestra 9/16: CPU=69.55% | RAM=23.11 MiB
+ETAPA 4/4: 4 trabajadores durante 30 segundos
+Muestra 10/16: CPU=67.62% | RAM=23.14 MiB
+Muestra 11/16: CPU=68.16% | RAM=23.15 MiB
+Muestra 12/16: CPU=74.86% | RAM=23.13 MiB
+Carga Growth finalizada.
+Muestra 13/16: CPU=66.68% | RAM=23.13 MiB
+Muestra 14/16: CPU=40.79% | RAM=23.04 MiB
+Muestra 15/16: CPU=2.40% | RAM=23.04 MiB
+Muestra 16/16: CPU=0.54% | RAM=23.04 MiB
+MONITOREO FINALIZADO
+CSV: /home/pcmadmin/pcm-orquestador/experimentos_v5_nuevos/datos/growth_v5_20261110_031625.csv
+=== GROWTH V5 FINALIZADO ===

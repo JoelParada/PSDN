@@ -1,0 +1,57 @@
+=== PRUEBA AUTONOMA PCM CON LSTM REAL ===
+Verificando nodo inicial...
+Iniciando carga real...
+=== GENERADOR DE CARGA PCM ===
+Destino: PCM-Node1
+Duracion maxima: 180 segundos
+Solicitudes concurrentes: 3
+Ejecutando controlador con LSTM V5 real...
+=== CONTROLADOR INTEGRADO PCM V5 ===
+Nodo activo: pcm-node1
+
+1. Recolectando metricas...
+=== RECOLECCION CPU CGROUP ===
+Medicion 1/10: 81.94%
+Medicion 2/10: 81.13%
+Medicion 3/10: 82.29%
+Medicion 4/10: 82.18%
+Medicion 5/10: 76.46%
+Medicion 6/10: 83.01%
+Medicion 7/10: 81.21%
+Medicion 8/10: 81.61%
+Medicion 9/10: 81.45%
+Medicion 10/10: 79.56%
+Archivo: /home/pcmadmin/pcm-orquestador/metricas/cpu_cgroup_carga.csv
+RECOLECCION FINALIZADA
+
+2. Transfiriendo metricas...
+
+3. Verificando frescura de metricas...
+Antiguedad: 1.6 segundos
+
+4. Ejecutando LSTM V5...
+CPU predicha: 81.126%
+Decision: CANDIDATO A CONMUTACION HACIA PCM-NODE3
+
+4. Verificando PCM-Node3...
+CPU contenedor: 0.05%
+RAM contenedor: 1.13%
+CPU global: 0.00%
+RAM disponible: 75.85%
+Nucleos: 1
+RESULTADO: DESTINO APTO
+
+5. Ejecutando conmutacion supervisada...
+=== CAMBIO CONTROLADO DE TRAFICO PCM ===
+Nodo actual: node1
+Nodo solicitado: node3
+Verificando destino...
+Aplicando cambio de Nginx...
+Verificando proxy...
+CAMBIO EXITOSO
+Tiempo de operacion: 0.89 segundos
+CONMUTACION SUPERVISADA EXITOSA
+Verificando nodo final...
+=== DETECCION DEL NODO ACTIVO ===
+Nodo activo configurado: pcm-node3
+Deteccion completada correctamente
