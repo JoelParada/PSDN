@@ -565,28 +565,5 @@ Para comparar estrategias correctamente:
 5. Registrar verdaderos positivos, falsos positivos, falsos negativos, disponibilidad HTTP y número de conmutaciones, además de MAE y RMSE.
 6. No presentar una ejecución individual como promedio estadístico.
 
----
 
-## 19. Plan experimental propuesto para PCM V6 (todavía no ejecutado)
-
-**Esta sección es una propuesta de mejora, no un resultado obtenido en PCM V5.**
-
-Se propone evaluar cuatro escenarios (`NORMAL`, `GROWTH`, `SPIKE`, `HIGHLOAD`) con **300 muestras por ejecución**, un intervalo objetivo de **2 segundos** y **5 repeticiones independientes** por escenario.
-
-| Cálculo de diseño | Operación | Resultado propuesto |
-|---|---|---:|
-| Duración nominal por ejecución | `300 × 2 s` | `600 s ≈ 10 min` |
-| Muestras por ronda de cuatro escenarios | `300 × 4` | `1,200` |
-| Total con cinco repeticiones | `300 × 4 × 5` | `6,000` |
-| Tiempo nominal total de captura | `6,000 × 2 s` | `12,000 s ≈ 200 min` |
-| Ventanas de inferencia por serie (`L=10`) | `300 − 10 + 1` | `291` |
-| Pares etiquetados por serie (`L=10`) | `300 − 10` | `290` |
-
-Los tiempos son **nominales**: no incluyen preparación, pausas ni posibles retrasos de captura. La elección de 300 muestras es una **hipótesis de diseño**, no un tamaño óptimo demostrado; deberá validarse con variabilidad entre repeticiones y desempeño predictivo.
-
-Para comparar ventanas de 10, 20 y 30 observaciones, se deberán entrenar o adaptar modelos compatibles y evaluar los mismos escenarios bajo condiciones equivalentes. El LSTM V5 existente espera ventanas de diez y no admite directamente longitudes distintas sin comprobar su arquitectura.
-
-## 20. Cómo mantener actualizada esta documentación
-
-Cada experimento nuevo debe añadir: fecha, commit o versión del código, escenario, archivo CSV, número de muestras, intervalo real de muestreo, versión de modelo, umbrales, predicciones, errores, latencias, decisión, resultado de Nginx y limitaciones observadas. Los valores de ejemplo de V5 no deben reemplazarse por cifras V6 hasta que se hayan medido.
 
