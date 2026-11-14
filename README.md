@@ -1,5 +1,20 @@
 # Predictive Container Migration (PCM V5)
 
+> **Lectura en GitHub:** este documento usa Markdown y ecuaciones LaTeX. Para ver las fórmulas renderizadas, abre el archivo `README.md` en la vista normal del repositorio (no en un editor de texto plano).
+
+---
+
+## Índice
+
+- [Descripción y objetivos](#1-descripción-del-proyecto)
+- [Arquitectura y tecnologías](#3-arquitectura-del-sistema)
+- [Modelo LSTM V5](#7-modelo-predictivo-lstm-v5)
+- [Resultados experimentales](#12-resultados-experimentales)
+- [Fundamentos matemáticos y cálculos](#18-fundamentos-matemáticos-y-cálculos-utilizados-en-pcm-v5)
+- [Plan V6 (propuesto)](#19-plan-experimental-propuesto-para-pcm-v6-todavía-no-ejecutado)
+
+---
+
 ## 1. Descripción del proyecto
 
 **Predictive Container Migration (PCM V5)** es un prototipo experimental de gestión de contenedores Docker que utiliza técnicas de aprendizaje profundo para analizar el consumo de CPU y apoyar decisiones de conmutación de tráfico entre nodos.
@@ -305,3 +320,273 @@ La implementación de controladores predictivo y reactivo permite estudiar difer
 Los experimentos muestran que es posible realizar conmutaciones entre réplicas previamente desplegadas. Sin embargo, los resultados de predicción también evidencian la importancia de comparar modelos complejos con métodos de referencia sencillos y de evaluar su rendimiento con suficientes pruebas.
 
 El repositorio reúne el código y los resultados experimentales del prototipo para facilitar su revisión académica y continuar mejorando su reproducibilidad.
+
+---
+
+## 18. Fundamentos matemáticos y cálculos utilizados en PCM V5
+
+Esta sección documenta los cálculos del prototipo y distingue entre **fórmulas generales**, **parámetros observados** y **resultados de ejecuciones específicas**. Para reproducir cifras exactas deben consultarse los scripts, los CSV y los archivos de parámetros del repositorio.
+
+### 18.1. Medición de utilización de CPU
+
+La entrada del controlador es una serie temporal de porcentajes de utilización de CPU del contenedor monitoreado:
+
+$$
+X=(x_1,x_2,\ldots,x_N),\qquad x_t=\text{CPU del contenedor en la medición }t\ (\%).
+$$
+
+En Linux, una forma de obtener el porcentaje de CPU de un contenedor a partir de contadores acumulados es:
+
+$$
+CPU(\%)=\frac{\Delta CPU_{\mathrm{contenedor}}}{\Delta CPU_{\mathrm{sistema}}}\times n_{\mathrm{CPU}}\times100.
+$$
+
+Donde los incrementos se calculan entre dos lecturas consecutivas y `n_CPU` corresponde al factor de CPU empleado por el monitor. **Esta expresión describe el cálculo habitual de métricas basadas en contadores; debe contrastarse con el script de captura concreto para afirmar que fue exactamente la implementación utilizada.** En Docker, el porcentaje de CPU de un contenedor puede superar el 100 % cuando consume más de un núcleo; por eso es importante documentar si se usa CPU del contenedor o CPU global del nodo.
+
+En el laboratorio se observó una configuración de **1 vCPU por VM**. Para comparaciones reproducibles se debe mantener constante la fuente de la métrica, el intervalo de captura y el número de vCPU.
+
+### 18.2. Normalización y desnormalización del LSTM
+
+El controlador carga parámetros de normalización guardados en `parametros_normalizacion_pcm_v5.npz`. La transformación utilizada en la inferencia V5 es:
+
+$$
+z_t=\frac{x_t-x_{\min}}{r},
+$$
+
+con `x_min` igual al mínimo de referencia almacenado y `r` igual al rango de referencia almacenado. Para una ventana de diez observaciones:
+
+```python
+entrada = ((valores_cpu - minimo) / rango).reshape(1, 10, 1)
+```
+
+La forma `(1, 10, 1)` significa **1 secuencia, 10 pasos temporales y 1 variable (CPU)**. Tras la inferencia, la predicción normalizada se devuelve a unidades de CPU:
+
+$$
+\widehat{x}_{t+1}=\widehat{z}_{t+1}\,r+x_{\min}.
+$$
+
+**No se deben sustituir valores numéricos para `minimo` y `rango` sin leer el archivo `.npz`.** Estos parámetros deben proceder del conjunto de entrenamiento, no recalcularse con datos de prueba.
+
+### 18.3. Ventanas temporales y cantidad de ejemplos
+
+La longitud de entrada utilizada por el modelo V5 es **10 mediciones**. La ventana deslizante de inferencia en el instante `t` es:
+
+$$
+W_t=(x_{t-9},x_{t-8},\ldots,x_t),\qquad \widehat{x}_{t+1}=f_{\mathrm{LSTM}}(W_t).
+$$
+
+Si se dispone de `N` muestras, el número de **ventanas de inferencia** de longitud `L` es:
+
+$$
+N_{\mathrm{ventanas}}=N-L+1.
+$$
+
+Con las **25 mediciones** del experimento GROWTH V5 y `L=10`:
+
+$$
+N_{\mathrm{ventanas}}=25-10+1=\boxed{16}.
+$$
+
+Estas son las ventanas `1–10`, `2–11`, ..., `16–25`, utilizadas en el análisis del controlador. Si cada ventana debe tener además un **valor real siguiente dentro del mismo archivo** para calcular su error, el número de pares supervisados es:
+
+$$
+N_{\mathrm{pares}}=N-L=25-10=\boxed{15}.
+$$
+
+La última ventana `16–25` permite inferir la muestra 26, pero su error no puede calcularse sin medir esa muestra. **Las ventanas se superponen y no son observaciones independientes.**
+
+### 18.4. Cálculo interno de la LSTM
+
+El modelo no calcula un promedio simple: aplica parámetros aprendidos y compuertas recurrentes a cada paso temporal. En una formulación estándar:
+
+$$
+\begin{aligned}
+f_t &= \sigma(W_f[h_{t-1},x_t]+b_f),\\
+i_t &= \sigma(W_i[h_{t-1},x_t]+b_i),\\
+\widetilde{c}_t &= \tanh(W_c[h_{t-1},x_t]+b_c),\\
+c_t &= f_t\odot c_{t-1}+i_t\odot\widetilde{c}_t,\\
+o_t &= \sigma(W_o[h_{t-1},x_t]+b_o),\\
+h_t &= o_t\odot\tanh(c_t).
+\end{aligned}
+$$
+
+Aquí `σ` es la función sigmoide, `⊙` representa el producto elemento a elemento, `c_t` la memoria de celda y `h_t` el estado oculto. La salida de la arquitectura entrenada se transforma en la predicción de CPU. Estas ecuaciones explican el funcionamiento de una LSTM estándar; **el número exacto de unidades, capas y parámetros debe verificarse en `entrenar_v5.py` o en el modelo `.keras`.**
+
+### 18.5. Umbral del controlador predictivo
+
+En las pruebas del controlador, una predicción genera una condición candidata de conmutación cuando:
+
+$$
+\widehat{x}_{t+1}\geq80\%.
+$$
+
+Ejemplo registrado en GROWTH V5: en la ventana `8–17`, el modelo produjo **81.270 %**, por lo que:
+
+$$
+81.270\%\geq80\%\quad\Longrightarrow\quad\text{candidato a conmutación}.
+$$
+
+El valor real siguiente (muestra 18) fue **81.68 %**. El error absoluto de **esa predicción individual** es:
+
+$$
+|81.68-81.270|=\boxed{0.410\ \text{puntos porcentuales}}.
+$$
+
+Este caso no representa el MAE global. Además, la conmutación no depende solo del umbral: requiere validaciones del nodo de destino y autorización.
+
+### 18.6. Regla del controlador reactivo: 7 de 10
+
+El controlador reactivo evalúa las diez observaciones más recientes. Para cada lectura se define un indicador:
+
+$$
+I(x_i>80)=\begin{cases}1,&x_i>80\\0,&x_i\leq80.\end{cases}
+$$
+
+La cantidad de lecturas por encima del umbral es:
+
+$$
+K_t=\sum_{i=t-9}^{t}I(x_i>80).
+$$
+
+Se genera una condición candidata si:
+
+$$
+\boxed{K_t\geq7}.
+$$
+
+Ejemplo: para la ventana `9–18` del GROWTH V5, **7 de 10** mediciones superan estrictamente el 80 %, por lo que se cumple la condición. En cambio, **una sola lectura elevada no basta**. Este criterio de persistencia de sobrecarga **no es** el baseline de persistencia utilizado en la comparación de MAE y RMSE.
+
+### 18.7. Verificación de recursos en el nodo de destino
+
+En la configuración de pruebas se aplicaron comprobaciones previas a la conmutación hacia Node3, incluyendo:
+
+| Variable del destino | Criterio observado en la lógica de pruebas |
+|---|---|
+| CPU del contenedor | `< 70 %` |
+| RAM del contenedor | `< 80 %` |
+| CPU global del nodo | `< 70 %` |
+| RAM disponible | `> 20 %` |
+
+Estos criterios son **umbrales de admisión**, no resultados del LSTM. Deben contrastarse con la configuración activa antes de cada demostración. La condición candidata no garantiza que se cambie Nginx: el destino debe estar disponible y cumplir las validaciones.
+
+### 18.8. Baseline de persistencia (predicción ingenua)
+
+Para evaluar si el LSTM mejora frente a una alternativa sencilla, se utiliza una predicción que mantiene el último valor conocido:
+
+$$
+\boxed{\widehat{x}_{t+1}^{\mathrm{persistencia}}=x_t}.
+$$
+
+Por ejemplo, si `x_t=82 %`, el baseline predice `82 %` para el siguiente instante. **Este baseline es un pronosticador, no el controlador reactivo 7/10.** Ambos pueden utilizar los mismos datos, pero responden preguntas distintas.
+
+### 18.9. MAE: error absoluto medio
+
+Con `n` pares de CPU real y predicha:
+
+$$
+\boxed{MAE=\frac{1}{n}\sum_{i=1}^{n}|x_i-\widehat{x}_i|}.
+$$
+
+Se interpreta en **puntos porcentuales de CPU**; cuanto menor, mejor. En la evaluación V5 de **102 pares**:
+
+- **LSTM V5:** `MAE = 10.6376` puntos porcentuales.
+- **Persistencia:** `MAE = 3.1481` puntos porcentuales.
+
+Diferencia absoluta:
+
+$$
+10.6376-3.1481=\boxed{7.4895\ \text{puntos porcentuales}}.
+$$
+
+En ese conjunto, la persistencia tuvo menor error absoluto medio.
+
+### 18.10. RMSE: raíz del error cuadrático medio
+
+$$
+\boxed{RMSE=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(x_i-\widehat{x}_i)^2}}.
+$$
+
+El RMSE penaliza más los errores grandes. Resultados V5 de la misma evaluación:
+
+- **LSTM V5:** `RMSE = 15.0126` puntos porcentuales.
+- **Persistencia:** `RMSE = 9.7821` puntos porcentuales.
+
+Diferencia absoluta:
+
+$$
+15.0126-9.7821=\boxed{5.2305\ \text{puntos porcentuales}}.
+$$
+
+**Conclusión respaldada por las métricas:** en este conjunto de evaluación, el baseline de persistencia superó al LSTM en precisión de predicción. Esto no prueba por sí solo qué controlador conmuta mejor: para esa comparación también deben medirse alertas, falsos positivos, tiempos y disponibilidad.
+
+### 18.11. Tiempos de conmutación registrados
+
+En pruebas individuales se reportaron:
+
+| Estrategia | Tiempo de conmutación registrado |
+|---|---:|
+| Predictiva | `1.2154 s` |
+| Reactiva | `1.3117 s` |
+
+Diferencia aritmética:
+
+$$
+\Delta t=1.3117-1.2154=\boxed{0.0963\ \text{s}}=96.3\ \text{ms}.
+$$
+
+**Advertencia metodológica:** estas cifras corresponden al tiempo medido de la operación de conmutación en ejecuciones específicas; **no incluyen necesariamente** la captura de muestras, la carga del modelo, el cálculo de inferencia y el resto del tiempo de detección. Por ello, no permiten concluir que el sistema predictivo completo sea más rápido. En las pruebas V5 se observaron inferencias de aproximadamente **9–12 segundos por ventana**, un cuello de botella a optimizar.
+
+### 18.12. Ejemplo de evaluación GROWTH V5 con 25 muestras
+
+Serie observada (porcentaje de CPU):
+
+```text
+20.73, 21.24, 19.69, 30.79, 31.62, 35.71, 47.43, 48.01,
+56.26, 75.75, 82.01, 80.45, 81.93, 81.99, 81.89, 75.95,
+82.27, 81.68, 82.04, 81.51, 77.06, 79.99, 53.99, 0.67, 0.73
+```
+
+- Total: **25 muestras**.
+- Ventanas de inferencia de 10 muestras: **16**.
+- Pares con valor siguiente disponible: **15**.
+- Primera condición predictiva registrada: ventana **8–17**, predicción **81.270 %**.
+- Primera condición reactiva calculada sobre esta serie: ventana **9–18**, **7/10** lecturas por encima del 80 %.
+
+La diferencia de **una posición de ventana** en este ejemplo no debe interpretarse automáticamente como una ventaja de tiempo real, ya que el LSTM y el reactivo tienen costos de procesamiento distintos y la evaluación de este archivo se hizo de forma retrospectiva.
+
+### 18.13. Reproducibilidad y criterios de comparación
+
+Para comparar estrategias correctamente:
+
+1. Utilizar **el mismo registro de CPU** para las dos estrategias al comparar decisiones retrospectivas.
+2. Documentar frecuencia de muestreo, unidad de CPU, longitud de ventana, umbrales y versión del modelo.
+3. Separar conjuntos de entrenamiento, validación y prueba **por ejecuciones completas**, evitando mezclar ventanas superpuestas del mismo ensayo entre conjuntos.
+4. Distinguir **latencia de inferencia**, **latencia de decisión**, **tiempo de conmutación Nginx** y **tiempo total desde la sobrecarga hasta la recuperación**.
+5. Registrar verdaderos positivos, falsos positivos, falsos negativos, disponibilidad HTTP y número de conmutaciones, además de MAE y RMSE.
+6. No presentar una ejecución individual como promedio estadístico.
+
+---
+
+## 19. Plan experimental propuesto para PCM V6 (todavía no ejecutado)
+
+**Esta sección es una propuesta de mejora, no un resultado obtenido en PCM V5.**
+
+Se propone evaluar cuatro escenarios (`NORMAL`, `GROWTH`, `SPIKE`, `HIGHLOAD`) con **300 muestras por ejecución**, un intervalo objetivo de **2 segundos** y **5 repeticiones independientes** por escenario.
+
+| Cálculo de diseño | Operación | Resultado propuesto |
+|---|---|---:|
+| Duración nominal por ejecución | `300 × 2 s` | `600 s ≈ 10 min` |
+| Muestras por ronda de cuatro escenarios | `300 × 4` | `1,200` |
+| Total con cinco repeticiones | `300 × 4 × 5` | `6,000` |
+| Tiempo nominal total de captura | `6,000 × 2 s` | `12,000 s ≈ 200 min` |
+| Ventanas de inferencia por serie (`L=10`) | `300 − 10 + 1` | `291` |
+| Pares etiquetados por serie (`L=10`) | `300 − 10` | `290` |
+
+Los tiempos son **nominales**: no incluyen preparación, pausas ni posibles retrasos de captura. La elección de 300 muestras es una **hipótesis de diseño**, no un tamaño óptimo demostrado; deberá validarse con variabilidad entre repeticiones y desempeño predictivo.
+
+Para comparar ventanas de 10, 20 y 30 observaciones, se deberán entrenar o adaptar modelos compatibles y evaluar los mismos escenarios bajo condiciones equivalentes. El LSTM V5 existente espera ventanas de diez y no admite directamente longitudes distintas sin comprobar su arquitectura.
+
+## 20. Cómo mantener actualizada esta documentación
+
+Cada experimento nuevo debe añadir: fecha, commit o versión del código, escenario, archivo CSV, número de muestras, intervalo real de muestreo, versión de modelo, umbrales, predicciones, errores, latencias, decisión, resultado de Nginx y limitaciones observadas. Los valores de ejemplo de V5 no deben reemplazarse por cifras V6 hasta que se hayan medido.
+
